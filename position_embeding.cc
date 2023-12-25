@@ -29,14 +29,12 @@ PositionEmbeding::~PositionEmbeding()
         delete [] pe_;
 }
 
-void PositionEmbeding::forward(std::vector<float*>& sentence)
+void PositionEmbeding::forward(ForwardData* in, ForwardData* out)
 {
-    int word_pos = 0;
-    for (std::vector<float*>::iterator it = sentence.begin(); it != sentence.end(); it++, word_pos++) {
-        float* word_vector = *it;
-        for(int i = 0; i < word_dim_; i+=2) {
-            word_vector[i] += pe_[word_pos * word_dim_ + i];
-            word_vector[i + 1] += pe_[word_pos * word_dim_ + i + 1];
+    for (int y = 0; y < in->height_; y++) {
+        for (int i = 0; i < in->width_; i += 2) {
+            out->matrix_[y * in->width_ + i] = in->matrix_[y * in->width_ + i] + pe_[y * word_dim_ + i];
+            out->matrix_[y * in->width_ + i + 1] = in->matrix_[y * in->width_ + i + 1] + pe_[y * word_dim_ + i + 1];
         }
     }
 
