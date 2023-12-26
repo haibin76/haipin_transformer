@@ -3,9 +3,12 @@
 
 typedef struct tagForwardData
 {
-    float* matrix_;
-    int height_;
-    int width_;
+    //the matrix size = height_ * width_ * batch_size_ * sizeof(float)
+    float*  matrix_;
+    int     height_;
+    int     num_;
+    int     width_;
+    int     batch_num_;
 }ForwardData;
 
 #endif

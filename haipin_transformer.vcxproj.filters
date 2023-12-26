@@ -27,6 +27,12 @@
     <ClCompile Include="transformer\decoder.cc">
       <Filter>transformer</Filter>
     </ClCompile>
+    <ClCompile Include="transformer\attention.cc">
+      <Filter>transformer</Filter>
+    </ClCompile>
+    <ClCompile Include="transformer\data_block.cc">
+      <Filter>transformer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="position_embeding.h" />
@@ -55,6 +61,12 @@
       <Filter>transformer</Filter>
     </ClInclude>
     <ClInclude Include="transformer\decoder.h">
+      <Filter>transformer</Filter>
+    </ClInclude>
+    <ClInclude Include="transformer\attention.h">
+      <Filter>transformer</Filter>
+    </ClInclude>
+    <ClInclude Include="transformer\data_block.h">
       <Filter>transformer</Filter>
     </ClInclude>
   </ItemGroup>

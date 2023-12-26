@@ -10,7 +10,7 @@
 //模拟python层的一些函数，最终这些都要被python替换掉
 
 //使用code取随机生成一个句子的词向量
-void create_sentence(ForwardData* sentence)
+void create_fd(ForwardData* sentence)
 {
     sentence->matrix_ = new float[sentence->height_ * sentence->width_];
 
@@ -50,23 +50,39 @@ int main(char argc, char** argv)
     AddLayerNorm* an = new AddLayerNorm(4);
     an->forward(&in, &out);*/
 
-    int word_dim = 512, in_vocab_size = 4096, genuine_vocab_size = 20000;
-    int in_max_words = 16, genuine_max_words = 32;
-    ForwardData in_sentence, genuine_sentence, out_sentence;
-    in_sentence.height_ = 4;
-    in_sentence.width_ = word_dim;
-    genuine_sentence.height_ = 5;
-    genuine_sentence.width_ = word_dim;
-    create_sentence(&in_sentence);
-    create_sentence(&genuine_sentence);
+    //set some constant parameters
+    int word_dim = 512, batch_size = 64;
+    int in_sentence_dim = 32, in_vocab_size = 4096;
+    int gu_sentence_dim = 48, gu_vocab_size = 8192;
 
-    PositionEmbeding* in_pe = new PositionEmbeding(in_max_words, word_dim);
-    in_pe->forward(&in_sentence, &in_sentence);
-    PositionEmbeding* genuine_pe = new PositionEmbeding(genuine_max_words, word_dim);
-    genuine_pe->forward(&genuine_sentence, &genuine_sentence);
+    //create input & output data, and initiate some variables
+    ForwardData in_data, gu_data, out_data;
+    in_data.height_ = in_sentence_dim;
+    in_data.width_ = word_dim;
+    in_data.batch_num_ = batch_size;
+    create_fd(&in_data);
 
-    Transformer* tf = new Transformer(in_max_words, word_dim, genuine_max_words, in_vocab_size, genuine_vocab_size);
-    tf->forward(&in_sentence, &genuine_sentence, &out_sentence);
+    gu_data.height_ = gu_sentence_dim;
+    gu_data.width_ = word_dim;
+    gu_data.batch_num_ = batch_size;
+    create_fd(&gu_data);
+
+    out_data.height_ = gu_sentence_dim;
+    out_data.width_ = word_dim;
+    out_data.batch_num_ = batch_size;
+    create_fd(&out_data);
+
+    //malloc the position of pe for input
+    PositionEmbeding* in_pe = new PositionEmbeding(in_sentence_dim, word_dim);
+    in_pe->forward(&in_data, &in_data);
+
+    //malloc the positio of pe for gu
+    PositionEmbeding* gu_pe = new PositionEmbeding(gu_sentence_dim, word_dim);
+    gu_pe->forward(&gu_data, &gu_data);
+
+    //start to transformer
+    Transformer* tf = new Transformer(batch_size, word_dim, in_sentence_dim, gu_sentence_dim, in_vocab_size, gu_vocab_size);
+    tf->forward(&in_data, &gu_data, &out_data);
 
     return 0;
 }

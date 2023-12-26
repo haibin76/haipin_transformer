@@ -144,6 +144,8 @@
     <ClCompile Include="main.cc" />
     <ClCompile Include="position_embeding.cc" />
     <ClCompile Include="transformer\add_norm.cc" />
+    <ClCompile Include="transformer\attention.cc" />
+    <ClCompile Include="transformer\data_block.cc" />
     <ClCompile Include="transformer\decoder.cc" />
     <ClCompile Include="transformer\encoder.cc" />
     <ClCompile Include="transformer\ffn_layer.cc" />
@@ -155,6 +157,8 @@
     <ClInclude Include="kernal\kernal_cpu.h" />
     <ClInclude Include="position_embeding.h" />
     <ClInclude Include="transformer\add_norm.h" />
+    <ClInclude Include="transformer\attention.h" />
+    <ClInclude Include="transformer\data_block.h" />
     <ClInclude Include="transformer\decoder.h" />
     <ClInclude Include="transformer\encoder.h" />
     <ClInclude Include="transformer\haipin_define.h" />

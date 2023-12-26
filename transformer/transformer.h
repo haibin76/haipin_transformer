@@ -10,19 +10,16 @@
 class Transformer
 {
 public:
-    Transformer(int en_max_word_in_sentence, int word_dim, int de_max_word_in_sentence,
-                int en_voc_size, int de_voc_size);
+    Transformer(int batch_dim, int word_dim,
+                int in_sentence_dim, int gu_sentence_dim,
+                int in_vocab_size, int gu_vocab_size);
     ~Transformer();
-    void forward(ForwardData* en_in, ForwardData* de_in, ForwardData* out);
+    void forward(ForwardData* in_fd, ForwardData* gu_fd, ForwardData* out_fd);
 
 private:
-    void createFrameWork(int en_max_word, int word_dim, int de_max_word, int en_voc_size, int de_voc_size);
+    void createFrameWork(int batch_dim, int word_dim, int in_sentence_dim, int gu_sentence_dim, int in_vocab_size, int gu_vocab_size);
 
 private:
-    int en_max_word_;
-    int de_max_word_;
-    int word_dim_;
-
     Encoder* encoder_[6];
     Decoder* decoder_[6];
 

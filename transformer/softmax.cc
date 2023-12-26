@@ -7,24 +7,20 @@ SoftMax::SoftMax(int dim)
 {
     dim_ = dim;
 
-    buffer_ = new double[dim_];
-
     return;
 }
 
 SoftMax::~SoftMax()
 {
-    if (buffer_)
-        delete[] buffer_;
-
     return;
 }
 
-void SoftMax::forward(ForwardData* in, ForwardData* out)
+void SoftMax::forward(ForwardData* in_fd, ForwardData* out_fd)
 {
-    softmax_cpu(in->matrix_, out->matrix_, buffer_, in->height_, in->width_);
+    softmax_cpu(in_fd->batch_num_, in_fd->matrix_, in_fd->height_, in_fd->width_, out_fd->matrix_);
 
-    out->height_ = in->height_;
-    out->width_ = in->width_;
+    out_fd->batch_num_ = in_fd->batch_num_;
+    out_fd->height_ = in_fd->height_;
+    out_fd->width_ = in_fd->width_;
     return;
 }

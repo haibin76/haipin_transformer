@@ -8,19 +8,16 @@
 class Decoder
 {
 public:
-    Decoder(int max_word, int word_dim);
+    Decoder(int batch_dim, int gu_sentence_dim, int word_dim);
     ~Decoder();
     void forward(ForwardData* in, ForwardData* kv, ForwardData* out);
 
 private:
-    void createFrameWork(int max_word, int word_dim);
+    void createFrameWork(int batch_dim, int max_word, int word_dim);
     void relu(ForwardData* in, ForwardData* out);
-    void setMask(int word_num);
+    void setMask(int sentence_dim);
 
 private:
-    int max_word_;
-    int word_dim_;
-
     MultiHeadAttention* mh_attention_msk_;
     AddLayerNorm* a_ln0_;
 
@@ -31,11 +28,11 @@ private:
     FfnLayer* ffn1_;
     AddLayerNorm* a_ln2_;
 
-    float* q_;
-    float* k_;
-    float* v_;
-    float* ffn_hide_;
-    char* msk_;
+    ForwardData             q_fd_;
+    ForwardData             k_fd_;
+    ForwardData             v_fd_;
+    ForwardData             m_fd_;
+    unsigned char*          msk_;
 };
 
 #endif

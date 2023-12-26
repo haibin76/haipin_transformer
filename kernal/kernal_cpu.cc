@@ -5,9 +5,9 @@
 #endif
 #include "kernal_cpu.h"
 
-float* matrix_create_cpu(int height, int width)
+float* matrix_create_cpu(int batch_num, int height, int width)
 {
-    float* matrix = new float[height * width];
+    float* matrix = new float[batch_num * height * width];
     if (!matrix)
         return NULL;
 
@@ -15,118 +15,142 @@ float* matrix_create_cpu(int height, int width)
     srand(time(NULL));  // 设置随机数种子
 #endif
 
-    for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
-            matrix[y * width + x] = (float)(((rand() % 0xFF) - 128) * 1.0 / 256);
-        }
-    }
+    for (int b = 0; b < batch_num; b++)
+        for (int y = 0; y < height; y++)
+            for (int x = 0; x < width; x++) {
+                matrix[(b * height + y) * width + x] = (float)(((rand() % 0xFF) - 128) * 1.0 / 256);
+            }
 
     return matrix;
 }
 
-void matrix_add_cpu(float* a, float* b, float* c, int height, int width)
+void matrix_delete_cpu(void* matrix)
 {
-    for (int y = 0; y < height; y++)
-        for (int x = 0; x < width; x++) {
-            c[y * width + x] = a[y * width + x] + b[y * width + x];
-        }
+    delete[] matrix;
+    return;
+}
+
+void matrix_add_cpu(int batch_num, float* matrix_a, float* matrix_b, float* matrix_c, char* mask, int height, int width)
+{
+    for(int b = 0; b < batch_num; b++)
+        for (int y = 0; y < height; y++)
+            for (int x = 0; x < width; x++) {
+                int address = (b * height + y) * width + x;
+                if (mask && mask[address] == 0)
+                    matrix_c[address] = 0;
+                else
+                    matrix_c[address] = matrix_a[address] + matrix_b[address];
+            }
 
     return;
 }
 
-void matrix_multi_cpu(float* a, float* b, float* c, int a_height, int a_width, int b_width)
+void matrix_multi_cpu(int batch_num, float* matrix_a, int a_height, int a_width, float* matrix_b, int b_width, float* matrix_c)
 {
-    for(int y = 0; y < a_height; y++)
-        for (int x = 0; x < b_width; x++) {
-            float sum = 0.0;
-            for (int k = 0; k < a_width; k++)
-                sum += a[y * a_width + k] * b[k * b_width + x];
+    for (int b = 0; b < batch_num; b++) {
+        int batch_offset_a = b * a_height * a_width;
+        int batch_offset_b = b * a_width * b_width;
 
-            c[y * b_width + x] = sum;
-        }
+        for (int y = 0; y < a_height; y++)
+            for (int x = 0; x < b_width; x++) {
+                double sum = 0.0;
+                for (int k = 0; k < a_width; k++)
+                    sum += matrix_a[y * a_width + k] * matrix_b[k * b_width + x];
 
-    return;
-}
-
-void add_layer_norm_cpu(float* in, float* out, char* gamme, char* beta, int height, int width)
-{
-    for (int y = 0; y < height; y++) {
-        double mean = 0.0, var = 0.0, tmp;
-
-        //mean
-        for (int x = 0; x < width; x++) {
-            mean += in[y * width + x];
-        }
-        mean = mean / width;
-
-        //var
-        for (int x = 0; x < width; x++) {
-            tmp = in[y * width + x] - mean;
-            tmp = tmp * tmp;
-            var += tmp;
-        }
-        var = var / width;
-        var += 1e-3;//avoid to too small
-        var = sqrt(var);
-
-        for (int x = 0; x < width; x++) {
-            tmp = (in[y * width + x] - mean) / var;
-            out[y * width + x] = (float)(gamme[x] * tmp + beta[x]);
-        }
-
+                matrix_c[y * b_width + x] = (float)sum;
+            }
     }
 
     return;
 }
 
-void softmax_cpu(float* in, float* out, double* buffer, int height, int width)
+void matrix_multi_without_transpose_cpu(int batch_num, float* matrix_a, int a_height, int a_num, int a_width,
+                                                       float* matrix_b, int b_height, int b_width,
+                                                       char* mask, double scale, float* matrix_c)
 {
-    for (int y = 0; y < height; y++) {
-        double sum = 0.0;
+    for (int b = 0; b < batch_num; b++) {
+        int batch_offset_a = b * a_height * a_width;
+        int batch_offset_b = b * a_width  * b_height;
+        int batch_offset_c = b * a_height * b_height;
 
-        for (int x = 0; x < width; x++) {
-            buffer[x] = exp(in[y * width + x]);
-            sum += buffer[x];
+        for (int y = 0; y < a_height; y++)
+            for (int x = 0; x < b_height; x++) {
+                if (mask && (!mask[batch_offset_c + y * b_height + x]))
+                    matrix_c[batch_offset_c + y * b_height + x] = 1/10000.0;
+                else {
+                    double sum = 0.0;
+                    for (int k = 0; k < a_num; k++)
+                        sum += matrix_a[batch_offset_a + y * a_width + k] * matrix_b[batch_offset_b + x * b_width + k];
+
+                    matrix_c[batch_offset_c + y * b_height + x] = (float)(sum/ scale);
+                }
+            }
+    }
+
+    return;
+
+}
+
+void add_layer_norm_cpu(int batch_num, float* matrix_a, int height, int width, float* matrix_c, char* gamme, char* beta)
+{
+    for (int b = 0; b < batch_num; b++) {
+        int batch_offse = height * width;
+        for (int y = 0; y < height; y++) {
+            //this meathod, calculate every row
+            double mean = 0.0, var = 0.0, tmp;
+
+            //mean
+            for (int x = 0; x < width; x++) {
+                mean += matrix_a[batch_offse + y * width + x];
+            }
+            mean = mean / width;
+
+            //var
+            for (int x = 0; x < width; x++) {
+                tmp = matrix_a[batch_offse + y * width + x] - mean;
+                tmp = tmp * tmp;
+                var += tmp;
+            }
+            var = var / width;
+            var += 1e-3;//avoid to too small
+            var = sqrt(var);
+
+            for (int x = 0; x < width; x++) {
+                tmp = (matrix_a[batch_offse + y * width + x] - mean) / var;
+                matrix_c[batch_offse + y * width + x] = (float)(gamme[x] * tmp + beta[x]);
+            }
         }
-
-        for (int x = 0; x < width; x++) {
-            out[y * width + x] = (float)(buffer[x] / sum);
-        }
-
     }
 
     return;
 }
 
-void scale_dot_product_attention(float* q, int q_height, int q_width, float* k, int k_height, int k_width,
-                                 float* v, int v_height, int v_width, char* mask, int dim,
-                                 float* out, int* out_height, int* out_width)
+void softmax_cpu(int batch_num, float* matrix_a, int height, int width, float* matrix_c)
 {
-    double scale = sqrt(dim);
+    //if the vector [a, b, c], if we calculate softmax with normal meathod, the result perhaps overflow
+    //we use the math as flow:softmax(a) = exp(a/k) / (exp(a/k) + exp(b-k) + exp(c-k) ...)
 
-    //now, we think:all parameters are legal, dont need to check
-    //#0 calc the Q * K^T, for performance, we dont tranpose the matrix
-    for(int y = 0; y < q_height; y++)
-        for (int x = 0; x < k_height; x++) {
-            double sum = 0.0;
-            for (int i = 0; i < q_width; i++)
-                sum += (q[y * q_width + i] * k[x * k_width + i]);
+    for (int b = 0; b < batch_num; b++) {
+        for (int y = 0; y < height; y++) {
+            //find the max num int the vector
+            double max_value = 0.0, sum = 0.0;
 
-            if (!mask[y * k_height + x])
-                out[y * k_height + x] = -10000.0;
-            else
-                out[y * k_height + x] = (float)(sum/scale);
+            for (int x = 0; x < width; x++) {
+                if (max_value < matrix_a[(b * height + y) * width + x])
+                    max_value = matrix_a[(b * height + y) * width + x];
+            }
+            max_value -= 1.0;
+
+            for (int x = 0; x < width; x++) {
+                sum += exp(matrix_a[(b * height + y) * width + x] - max_value);
+            }
+
+            for (int x = 0; x < width; x++) {
+                matrix_c[(b * height + y) * width + x] = (float)(exp(matrix_a[(b * height + y) * width + x] - max_value) / sum);
+            }
+
         }
-
-    //#1 softmax(out)
-    for (int y = 0; y < q_height; y++)
-        softmax_cpu(out, q, (double*)k, q_height, k_height);
-
-    //#2 MatMul(softmax(q*k^t) * v)
-    matrix_multi_cpu(q, v, out, q_height, k_height, v_width);
-
-    *out_height = q_height;
-    *out_width = v_width;
+    }
 
     return;
 }

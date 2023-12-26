@@ -6,16 +6,16 @@
 class AddLayerNorm
 {
 public:
-    AddLayerNorm(int dim);
+    AddLayerNorm(int word_dim);
     ~AddLayerNorm();
-    void forward(ForwardData* in, ForwardData* out);
+    void forward(ForwardData* in_fd, ForwardData* out_fd);
 
 private:
-    int dim_;
 
     //don't know why gamme beta is 1, 0, but dont update
-    char* gamme_;
-    char* beta_;
+    int     word_dim_;
+    char*   gamme_;
+    char*   beta_;
 };
 
 #endif

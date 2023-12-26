@@ -6,7 +6,7 @@
 class PositionEmbeding
 {
 public:
-    PositionEmbeding(int max_word, int word_dim);
+    PositionEmbeding(int sentence_dim, int word_dim);
     ~PositionEmbeding();
     void forward(ForwardData* in, ForwardData* out);
 
@@ -14,9 +14,9 @@ private:
     void calcPositionEmbeding();
 
 private:
-    int max_word_;
-    int word_dim_;
-    float* pe_;
+    int     sentence_dim_;
+    int     word_dim_;
+    float*  pe_;
 };
 
 #endif

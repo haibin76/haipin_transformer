@@ -3,31 +3,24 @@
 
 #include "haipin_define.h"
 #include "ffn_layer.h"
+#include "attention.h"
 
 class MultiHeadAttention
 {
 public:
-    MultiHeadAttention(int max_num, int q_word_dim, int k_word_dim, int v_word_dim);
+    MultiHeadAttention(int batch_dim, int sentence_dim, int word_dim);
     ~MultiHeadAttention();
-    void forward(ForwardData* q, ForwardData* k, ForwardData* v, ForwardData* out, char* mask);
+    void forward(ForwardData* q_fd, ForwardData* k_fd, ForwardData* v_fd, ForwardData* mask, ForwardData* out_fd);
 
 private:
-    void newMemoryForVariable();
+    void createFrameWork(int batch_dim, int gu_sentence_dim, int word_dim);
 
 private:
-    int max_words_;
-    int q_word_dim_;
-    int k_word_dim_;
-    int v_word_dim_;
-
-    float* q_[8];
-    float* k_[8];
-    float* v_[8];
-    float* r_[8];
-
     FfnLayer* q_liner_;
     FfnLayer* k_liner_;
     FfnLayer* v_liner_;
+    Attention* attention_[8];
+
     FfnLayer* out_liner_;
 };
 

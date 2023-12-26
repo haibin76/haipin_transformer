@@ -8,13 +8,12 @@ class SoftMax
 public:
     SoftMax(int dim);
     ~SoftMax();
-    void forward(ForwardData* in, ForwardData* out);
+    void forward(ForwardData* in_fd, ForwardData* out_fd);
 
 private:
     int dim_;
 
     //don't know why gamme beta is 1, 0, but dont update
-    double* buffer_;
 };
 
 #endif
