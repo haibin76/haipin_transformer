@@ -154,7 +154,7 @@
     <ClCompile Include="transformer\transformer.cc" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="kernal\kernal_cpu.h" />
+    <ClInclude Include="kernal\kernal.h" />
     <ClInclude Include="position_embeding.h" />
     <ClInclude Include="transformer\add_norm.h" />
     <ClInclude Include="transformer\attention.h" />

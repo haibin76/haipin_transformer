@@ -3,9 +3,9 @@
 #if !_WIN32
 #include <time.h>
 #endif
-#include "kernal_cpu.h"
+#include "kernal.h"
 
-float* matrix_create_cpu(int batch_num, int height, int width)
+float* matrix_create(int batch_num, int height, int width)
 {
     float* matrix = new float[batch_num * height * width];
     if (!matrix)
@@ -24,13 +24,13 @@ float* matrix_create_cpu(int batch_num, int height, int width)
     return matrix;
 }
 
-void matrix_delete_cpu(void* matrix)
+void matrix_delete(void* matrix)
 {
     delete[] matrix;
     return;
 }
 
-void matrix_add_cpu(int batch_num, float* matrix_a, float* matrix_b, float* matrix_c, char* mask, int height, int width)
+void matrix_add(int batch_num, float* matrix_a, float* matrix_b, float* matrix_c, char* mask, int height, int width)
 {
     for(int b = 0; b < batch_num; b++)
         for (int y = 0; y < height; y++)
@@ -45,7 +45,7 @@ void matrix_add_cpu(int batch_num, float* matrix_a, float* matrix_b, float* matr
     return;
 }
 
-void matrix_multi_cpu(int batch_num, float* matrix_a, int a_height, int a_width, float* matrix_b, int b_width, float* matrix_c)
+void matrix_multi(int batch_num, float* matrix_a, int a_height, int a_width, float* matrix_b, int b_width, float* matrix_c)
 {
     for (int b = 0; b < batch_num; b++) {
         int batch_offset_a = b * a_height * a_width;
@@ -64,7 +64,7 @@ void matrix_multi_cpu(int batch_num, float* matrix_a, int a_height, int a_width,
     return;
 }
 
-void matrix_multi_without_transpose_cpu(int batch_num, float* matrix_a, int a_height, int a_num, int a_width,
+void matrix_multi_without_transpose(int batch_num, float* matrix_a, int a_height, int a_num, int a_width,
                                                        float* matrix_b, int b_height, int b_width,
                                                        char* mask, double scale, float* matrix_c)
 {
@@ -76,7 +76,7 @@ void matrix_multi_without_transpose_cpu(int batch_num, float* matrix_a, int a_he
         for (int y = 0; y < a_height; y++)
             for (int x = 0; x < b_height; x++) {
                 if (mask && (!mask[batch_offset_c + y * b_height + x]))
-                    matrix_c[batch_offset_c + y * b_height + x] = 1/10000.0;
+                    matrix_c[batch_offset_c + y * b_height + x] = (float)(1/10000.0);
                 else {
                     double sum = 0.0;
                     for (int k = 0; k < a_num; k++)
@@ -91,7 +91,7 @@ void matrix_multi_without_transpose_cpu(int batch_num, float* matrix_a, int a_he
 
 }
 
-void add_layer_norm_cpu(int batch_num, float* matrix_a, int height, int width, float* matrix_c, char* gamme, char* beta)
+void add_layer_norm(int batch_num, float* matrix_a, int height, int width, float* matrix_c, char* gamme, char* beta)
 {
     for (int b = 0; b < batch_num; b++) {
         int batch_offse = height * width;
@@ -125,7 +125,7 @@ void add_layer_norm_cpu(int batch_num, float* matrix_a, int height, int width, f
     return;
 }
 
-void softmax_cpu(int batch_num, float* matrix_a, int height, int width, float* matrix_c)
+void softmax(int batch_num, float* matrix_a, int height, int width, float* matrix_c)
 {
     //if the vector [a, b, c], if we calculate softmax with normal meathod, the result perhaps overflow
     //we use the math as flow:softmax(a) = exp(a/k) / (exp(a/k) + exp(b-k) + exp(c-k) ...)

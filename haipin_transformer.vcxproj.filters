@@ -42,7 +42,7 @@
     <ClInclude Include="transformer\haipin_define.h">
       <Filter>transformer</Filter>
     </ClInclude>
-    <ClInclude Include="kernal\kernal_cpu.h">
+    <ClInclude Include="kernal\kernal.h">
       <Filter>kernal</Filter>
     </ClInclude>
     <ClInclude Include="transformer\add_norm.h">

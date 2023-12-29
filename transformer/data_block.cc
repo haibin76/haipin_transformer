@@ -1,10 +1,10 @@
 #include <string.h>
 #include "data_block.h"
-#include "../kernal/kernal_cpu.h"
+#include "../kernal/kernal.h"
 
 void new_fd(ForwardData* in_fd, int batch_num, int height, int width)
 {
-    in_fd->matrix_ = matrix_create_cpu(batch_num, height, width);
+    in_fd->matrix_ = matrix_create(batch_num, height, width);
     in_fd->batch_num_ = batch_num;
     in_fd->height_ = height;
     in_fd->width_ = width;
@@ -14,7 +14,7 @@ void new_fd(ForwardData* in_fd, int batch_num, int height, int width)
 
 void fd_assignment(ForwardData* in_fd, ForwardData* out_fd)
 {
-    out_fd->matrix_ = matrix_create_cpu(in_fd->batch_num_, in_fd->height_, in_fd->width_);
+    out_fd->matrix_ = matrix_create(in_fd->batch_num_, in_fd->height_, in_fd->width_);
 
     memcpy(out_fd->matrix_, in_fd->matrix_, in_fd->batch_num_ * in_fd->height_ * in_fd->width_ * sizeof(float));
 

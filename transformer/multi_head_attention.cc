@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include "../kernal/kernal_cpu.h"
+#include "../kernal/kernal.h"
 #include "multi_head_attention.h"
 
 MultiHeadAttention::MultiHeadAttention(int batch_dim, int sentence_dim, int word_dim)
